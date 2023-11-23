@@ -1,4 +1,4 @@
-package PBS.model;
+package pbs.model;
 
 public class Question {
     public String question;
