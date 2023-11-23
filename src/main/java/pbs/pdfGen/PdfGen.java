@@ -1,6 +1,6 @@
-package PBS.pdfGen;
+package pbs.pdfGen;
 
-import PBS.service.ExaminerService;
+import pbs.examiner.ExaminerService;
 import lombok.RequiredArgsConstructor;
 import org.jboss.logging.Logger;
 

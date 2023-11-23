@@ -10,23 +10,26 @@ repositories {
 
 dependencies {
     implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
-    implementation 'io.quarkus:quarkus-jdbc-h2'
-    implementation 'io.quarkus:quarkus-smallrye-openapi'
-    implementation 'io.quarkus:quarkus-hibernate-orm-panache'
-    implementation 'io.quarkus:quarkus-kubernetes'
-    implementation 'io.quarkus:quarkus-jdbc-postgresql'
-    implementation 'io.quarkus:quarkus-arc'
-    implementation 'io.quarkus:quarkus-hibernate-orm'
-    implementation 'io.quarkus:quarkus-agroal'
-    implementation 'io.quarkus:quarkus-resteasy-reactive-jackson'
+    implementation 'io.quarkus:quarkus-smallrye-openapi:3.2.2.Final'
+    implementation 'io.quarkus:quarkus-hibernate-reactive-panache:3.2.2.Final'
+    implementation 'io.quarkus:quarkus-kubernetes:3.2.2.Final'
+    implementation 'io.quarkus:quarkus-reactive-pg-client:3.2.2.Final'
+    implementation 'io.quarkus:quarkus-arc:3.2.2.Final'
+    implementation 'io.quarkus:quarkus-hibernate-orm:3.2.2.Final'
+    implementation 'io.quarkus.resteasy.reactive:resteasy-reactive:3.2.2.Final'
+    implementation 'io.quarkus:quarkus-resteasy-reactive-jackson:3.2.2.Final'
+    implementation 'io.quarkus:quarkus-hibernate-validator:3.2.2.Final'
+    implementation 'io.quarkus:quarkus-elytron-security-common:3.2.2.Final'
+    implementation 'io.quarkus:quarkus-smallrye-jwt:3.2.2.Final'
+    implementation 'io.quarkus:quarkus-smallrye-jwt-build:3.2.2.Final'
     implementation 'org.apache.pdfbox:pdfbox:2.0.30'
     implementation 'com.opencsv:opencsv:5.7.1'
     compileOnly 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
-    testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation 'io.quarkus:quarkus-junit5-properties:3.2.2.Final'
 }
 
-group 'PBS'
+group 'pbs'
 version '1.0-SNAPSHOT'
 
 java {
