@@ -64,6 +64,7 @@ public class ExaminerController {
     @PUT
     @Path("self/password")
     @RolesAllowed("user")
+    @Consumes("application/json")
     public Uni<Examiner> changePassword(PasswordChange passwordChange) {
         return examinerService.changePassword(passwordChange.currentPassword(),
                         passwordChange.newPassword());

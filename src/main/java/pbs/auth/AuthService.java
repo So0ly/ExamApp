@@ -1,5 +1,6 @@
 package pbs.auth;
 
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.security.AuthenticationFailedException;
 import io.smallrye.jwt.build.Jwt;
 import io.smallrye.mutiny.Uni;
@@ -20,6 +21,7 @@ public class AuthService {
         this.examinerService = examinerService;
     }
 
+    @WithTransaction
     public Uni<String> authenticate(AuthRequest authRequest){
         return examinerService.findByMail(authRequest.mail()).
                 onItem().transform(examiner -> {
