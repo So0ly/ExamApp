@@ -49,16 +49,17 @@ public class ExaminerController {
             description = "Creates a single examiner.")
     @Consumes("application/json")
     @Produces("application/json")
-//    public Response addExaminer(@QueryParam("email") String email,
-//                                @QueryParam("password") String password,
-//                                @QueryParam("firstName") String firstName,
-//                                @QueryParam("lastName") String  lastName,
-//                                @QueryParam("titles") String titles){
-//        Examiner examiner = new Examiner(email, password, firstName, lastName, titles);
-//        examinerService.add(examiner);
-//        return Response.status(Response.Status.OK).entity(examiner).type(MediaType.APPLICATION_JSON_TYPE).build();
     public Uni<Examiner> addExaminer(Examiner examiner){
         return examinerService.add(examiner);
+    }
+
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces("application/json")
+    @Path("{id}")
+    public Uni<Examiner> update(@PathParam("id") Long id, Examiner examiner) {
+        examiner.id = id;
+        return examinerService.update(examiner);
     }
 
     @PUT

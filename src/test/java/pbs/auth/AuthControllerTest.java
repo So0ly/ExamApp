@@ -9,14 +9,14 @@ import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.not;
 
 @QuarkusTest
-class AuthResourceTest {
+class AuthControllerTest {
 
     @Test
     void loginValidCredentials() {
         given()
-                .body("{\"name\":\"admin\",\"password\":\"quarkus\"}")
+                .body("{\"mail\":\"admin@pbs.edu.pl\",\"password\":\"quarkus\"}")
                 .contentType(ContentType.JSON)
-                .when().post("/api/v1/auth/login")
+                .when().post("http://localhost:8080/api/auth/login")
                 .then()
                 .statusCode(200)
                 .body(not(emptyString()));
@@ -25,9 +25,9 @@ class AuthResourceTest {
     @Test
     void loginInvalidCredentials() {
         given()
-                .body("{\"name\":\"admin\",\"password\":\"not-quarkus\"}")
+                .body("{\"mail\":\"admin@pbs.edu.pl\",\"password\":\"not-quarkus\"}")
                 .contentType(ContentType.JSON)
-                .when().post("/api/v1/auth/login")
+                .when().post("http://localhost:8080/api/auth/login")
                 .then()
                 .statusCode(401);
     }
