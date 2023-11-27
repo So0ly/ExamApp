@@ -4,23 +4,11 @@ import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
 import pbs.examiner.ExaminerService;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.font.PDType0Font;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+
 import org.jboss.logging.Logger;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -37,7 +25,7 @@ public class ReportServiceImpl implements ReportService{
     @WithTransaction
     public Uni<Report> add(Report report) {
         LOG.trace("addReport");
-        return examinerService.getCurrentUser().
+        return examinerService.getCurrentExaminer().
                 chain(examiner -> {
                     report.examiner = examiner;
                     return report.persistAndFlush();
@@ -51,7 +39,7 @@ public class ReportServiceImpl implements ReportService{
 
     public Uni<List<Report>> getExaminerReports(Long id) {
         LOG.trace("getExaminerReports");
-        return examinerService.getCurrentUser().
+        return examinerService.getCurrentExaminer().
                 chain(ex -> Report.list("examiner", ex));
     }
 

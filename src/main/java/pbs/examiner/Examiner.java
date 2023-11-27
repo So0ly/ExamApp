@@ -12,7 +12,7 @@ import java.util.List;
 @Table(name = "examiners")
 public class Examiner extends PanacheEntity {
 
-    @Email
+    @Email(regexp = "^[a-zA-Z0-9._%+-]+@pbs\\.edu\\.pl$")
     @Column(unique = true, nullable = false)
     public String mail;
     @Column(nullable = false)

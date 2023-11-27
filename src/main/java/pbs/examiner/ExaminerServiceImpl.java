@@ -58,13 +58,13 @@ public class ExaminerServiceImpl implements ExaminerService {
         }).chain(s -> s.merge(examiner));
     }
 
-    public Uni<Examiner> getCurrentUser() {
+    public Uni<Examiner> getCurrentExaminer() {
         return findByMail(jwt.getName());
     }
 
     @WithTransaction
     public Uni<Examiner> changePassword(String currentPassword, String newPassword) {
-        return getCurrentUser()
+        return getCurrentExaminer()
                 .chain(ex -> {
                     if (!ExaminerService.matches(ex, currentPassword)) {
                         throw new ClientErrorException("Current password does not match", Response.Status.CONFLICT);

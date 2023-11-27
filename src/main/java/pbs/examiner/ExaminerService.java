@@ -13,7 +13,7 @@ public interface ExaminerService {
     Uni<Void> delete(Long id);
     Uni<Examiner> add(Examiner examiner);
     Uni<Examiner> update(Examiner examiner);
-    Uni<Examiner> getCurrentUser();
+    Uni<Examiner> getCurrentExaminer();
     Uni<Examiner> changePassword(String currentPassword, String newPassword);
 
     static boolean matches(Examiner examiner, String password) {

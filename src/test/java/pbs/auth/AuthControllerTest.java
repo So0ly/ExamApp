@@ -13,13 +13,15 @@ class AuthControllerTest {
 
     @Test
     void loginValidCredentials() {
-        given()
+        String token = given()
                 .body("{\"mail\":\"admin@pbs.edu.pl\",\"password\":\"quarkus\"}")
                 .contentType(ContentType.JSON)
                 .when().post("http://localhost:8080/api/auth/login")
                 .then()
                 .statusCode(200)
-                .body(not(emptyString()));
+                .body(not(emptyString()))
+                .extract().asString();
+        System.out.println(token);
     }
 
     @Test

@@ -35,6 +35,13 @@ public class ExaminerController {
         return examinerService.findById(id);
     }
 
+    @GET
+    @Path("self")
+    @RolesAllowed("user")
+    public Uni<Examiner> getCurrentExaminer() {
+        return examinerService.getCurrentExaminer();
+    }
+
     @DELETE
     @Operation(operationId = "deleteExaminerById",
             description = "Deletes a single examiner.")
