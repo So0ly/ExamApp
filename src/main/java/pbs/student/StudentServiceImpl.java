@@ -67,7 +67,6 @@ public class StudentServiceImpl implements StudentService {
             LOG.error(e);
         }
         students.forEach(student -> LOG.trace(student.toString()));
-        addStudents(students);
         return students;
     });
     }

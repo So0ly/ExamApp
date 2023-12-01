@@ -1,16 +1,16 @@
-import React from 'react';
-import {useNavigate} from 'react-router-dom';
-import {Avatar, Box, Button, Container, Snackbar, TextField, Typography} from '@mui/material';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import {useDispatch} from 'react-redux';
-import {login} from './redux';
+import {Avatar, Box, Button, Container, Snackbar, TextField, Typography} from "@mui/material";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import {useForm} from '../useForm';
+import React from "react";
+import {useDispatch} from "react-redux";
+import {useNavigate} from "react-router-dom";
+import {login} from "./redux";
 
-export const Login = () => {
+export const Register = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const {values, isValid, error, setError, onChange} = useForm({
-        initialValues: {mail: '', password: ''}
+        initialValues: {mail: '', password: '', firstName: '', lastName: '', titles: ''}
     });
     const sendLogin = () => {
         if (isValid) {
@@ -26,6 +26,7 @@ export const Login = () => {
                 });
         }
     };
+
     return (
         <Container maxWidth='xs'>
             <Box sx={{mt: theme => theme.spacing(8), display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
@@ -33,7 +34,7 @@ export const Login = () => {
                     <LockOutlinedIcon />
                 </Avatar>
                 <Typography component='h1' variant='h5'>
-                    Zaloguj się do aplikacji
+                    Zaloguj się do apliakcji
                 </Typography>
                 <Box noValidate sx={{ mt: 1 }}>
                     <TextField margin='normal' required fullWidth autoFocus
@@ -54,4 +55,4 @@ export const Login = () => {
             />
         </Container>
     );
-};
+}

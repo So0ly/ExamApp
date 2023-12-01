@@ -1,6 +1,7 @@
 package pbs.report;
 
 import io.smallrye.mutiny.Uni;
+import jakarta.annotation.security.RolesAllowed;
 import org.jboss.resteasy.reactive.ResponseStatus;
 import pbs.student.Student;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -17,6 +18,7 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 @ApplicationScoped
 @RequiredArgsConstructor
 @Path("/report")
+@RolesAllowed("user")
 public class ReportController {
 
     private final ReportService reportService;
@@ -26,6 +28,8 @@ public class ReportController {
     @Operation(operationId = "getAllReports",
                description = "Returns all available reports. ADMIN only.")
     @Produces({"application/json"})
+    @Path("/all")
+    @RolesAllowed("admin")
     public Uni<List<Report>> getAllReports(){
         return reportService.getAllReports();
     }
@@ -33,25 +37,26 @@ public class ReportController {
     @GET
     @Operation(operationId = "getReportById",
             description = "Returns a single report by its ID. ADMIN only.")
-    @Path("/{Id}") //TODO @Path("self")
+    @Path("/{Id}")
     @Produces({"application/json"})
-    public Uni<Report> getReportById(@PathParam("Id") Long id) { //TODO only ADMIN account
+    @RolesAllowed("admin")
+    public Uni<Report> getReportById(@PathParam("Id") Long id) {
         return reportService.getReportById(id);
     }
 
     @GET
     @Operation(operationId = "getExaminerReports",
             description = "Returns all available reports for a provided examiner.")
-    @Path("/byExId/{Id}")
     @Produces({"application/json"})
-    public Uni<List<Report>> getExaminerReports(@PathParam("Id") Long id) {
-        return reportService.getExaminerReports(id);
+    public Uni<List<Report>> getExaminerReports() {
+        return reportService.getExaminerReports();
     }
 
     @POST
     @Operation(operationId = "addReport",
             description = "Adds a report. It's assigned to a logged in examiner.")
     @ResponseStatus(201)
+    @Consumes("application/json")
     public Uni<Report> addReport(Report report) {
         return reportService.add(report);
     }
@@ -64,7 +69,7 @@ public class ReportController {
         return reportService.delete(id);
     }
 
-    @PATCH
+    @PUT
     @Operation(operationId = "updateReport",
             description = "Modify a report by a given ID or add it if it doesn't exist")
     @Path("/{Id}")
@@ -77,8 +82,8 @@ public class ReportController {
     @GET
     @Operation(operationId = "generatePdf")
     @Path("/generate")
-    public void generatePdf(){
+    public Uni<Void> generatePdf(){
         Uni<List<Report>> reports = reportService.getAllReports();
-        reportService.generatePDF(reports);
+        return reportService.generatePDF(reports);
     }
 }

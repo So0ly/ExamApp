@@ -2,6 +2,7 @@ package pbs.examiner;
 
 import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
+import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.core.Response;

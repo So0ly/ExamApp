@@ -3,6 +3,7 @@ package pbs.examiner;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
+import io.quarkus.test.security.jwt.JwtSecurity;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
@@ -19,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ExaminerControllerTest {
 
     @Test
-    @TestSecurity(user = "admin@pbs.edu.pl", roles = "admin")
+    @TestSecurity(user = "admin@pbs.edu.pl", roles = {"admin", "user"})
     void list() {
         given()
                 .when().get("http://localhost:8080/api/examiner")

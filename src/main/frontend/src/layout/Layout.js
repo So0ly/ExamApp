@@ -7,6 +7,7 @@ import {
 import { toggleDrawer} from './';
 import {TopBar} from './TopBar';
 import {MainDrawer} from './MainDrawer';
+import {ChangePasswordDialog} from "../examiners";
 
 export const Layout = ({children}) => {
     const navigate = useNavigate();
@@ -23,7 +24,7 @@ export const Layout = ({children}) => {
         <Box sx={{display: 'flex'}}>
             <TopBar
                 goHome={() => navigate('/')}
-                newTask={() => {/* TODO */}}
+                reportsNew={() => navigate('/reports/new')}
                 toggleDrawer={doToggleDrawer} drawerOpen={drawerOpen}
             />
             <MainDrawer
@@ -35,6 +36,7 @@ export const Layout = ({children}) => {
                     {children}
                 </Box>
             </Box>
+            <ChangePasswordDialog />
         </Box>
     );
 };

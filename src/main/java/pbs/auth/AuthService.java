@@ -4,4 +4,5 @@ import io.smallrye.mutiny.Uni;
 
 public interface AuthService {
     Uni<String> authenticate(AuthRequest authRequest);
+    Uni<Void> register(RegisterRequest registerRequest);
 }

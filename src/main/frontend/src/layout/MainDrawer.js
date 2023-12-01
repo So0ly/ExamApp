@@ -11,7 +11,7 @@ import {
     Toolbar,
     Tooltip
 } from '@mui/material';
-import InboxIcon from '@mui/icons-material/Inbox';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 import PersonIcon from '@mui/icons-material/Person';
 import {HasRole} from '../auth';
 
@@ -45,7 +45,7 @@ export const MainDrawer = ({drawerOpen, toggleDrawer}) => (
         <Toolbar/>
         <Box sx={{overflow: drawerOpen ? 'auto' : 'hidden'}}>
             <List>
-                <Item disableTooltip={drawerOpen} Icon={InboxIcon} title='Zaliczenia' to='/'/>
+                <Item disableTooltip={drawerOpen} Icon={AssignmentIcon} title='Archiwum zaliczeń' to='/reports'/>
                 <HasRole role='admin'>
                     <Divider/>
                     <Item disableTooltip={drawerOpen} Icon={PersonIcon} title='Egzaminatorzy' to='/examiners'/>

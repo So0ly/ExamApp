@@ -9,11 +9,9 @@ public interface ReportService {
     Uni<List<Report>> getAllReports();
     Uni<Report> add(Report report);
     Uni<Report> getReportById(Long id);
-    Uni<List<Report>> getExaminerReports(Long id);
+    Uni<List<Report>> getExaminerReports();
     Uni<List<Report>> getStudentReports(Long id);
     Uni<Void> delete(Long id);
     Uni<Report> update(Report report);
-
-
-    void generatePDF(Uni<List<Report>> reportList);
+    Uni<Void> generatePDF(Uni<List<Report>> reportList);
 }

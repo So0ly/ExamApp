@@ -19,6 +19,24 @@ export const login = createAsyncThunk(
     }
 );
 
+export const register = createAsyncThunk(
+    'auth/register',
+    async ({mail, password, firstName, lastName, titles}, thunkAPI) => {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({mail, password, firstName, lastName, titles}),
+        });
+        if (!response.ok) {
+            return thunkAPI.rejectWithValue({
+                status: response.status, statusText: response.statusText, data: response.data});
+        }
+        return response.text();
+    }
+);
+
 const authSlice = createSlice({
     name: 'auth',
     initialState: {

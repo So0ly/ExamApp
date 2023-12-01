@@ -1,6 +1,7 @@
 package pbs.student;
 
 import io.smallrye.mutiny.Uni;
+import jakarta.annotation.security.RolesAllowed;
 import org.jboss.resteasy.reactive.RestForm;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.*;
@@ -16,6 +17,7 @@ import java.util.Optional;
 @ApplicationScoped
 @RequiredArgsConstructor
 @Path("/student")
+@RolesAllowed("user")
 public class StudentController {
     private final StudentService studentService;
 
@@ -23,15 +25,17 @@ public class StudentController {
     @Operation(operationId = "getAllStudents",
             description = "Returns all available students. ADMIN only.")
     @Produces({"application/json"})
+    @RolesAllowed("admin")
     public Uni<List<Student>> getAllStudents(){
         return studentService.getStudents();
     }
 
     @GET
     @Operation(operationId = "getStudentById",
-            description = "Returns a single student.")
+            description = "Returns a single student. ADMIN only")
     @Path("/{id}")
     @Produces("application/json")
+    @RolesAllowed("admin")
     public Uni<Student> getStudentById(@PathParam("id") Long id){
         return studentService.getStudentById(id);
     }

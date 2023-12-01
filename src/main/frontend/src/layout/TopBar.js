@@ -1,11 +1,11 @@
 import React from 'react';
-import {AppBar, IconButton, Toolbar, Tooltip, Typography} from '@mui/material';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import {AppBar, Button, IconButton, Toolbar, Tooltip, Typography} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import MenuIcon from '@mui/icons-material/Menu';
+import {ExaminerIcon} from './UserIcon';
 
-export const TopBar = ({goHome, newTask, toggleDrawer}) => (
+export const TopBar = ({goHome, reportsNew, toggleDrawer}) => (
     <AppBar
         position='fixed'
         sx={{
@@ -33,15 +33,15 @@ export const TopBar = ({goHome, newTask, toggleDrawer}) => (
             <Typography variant='h6' component='div' sx={{ flexGrow: 1 }}>
                 Aplikacja Egzaminacyjna
             </Typography>
-            <Tooltip title='Quick Add'>
-                <IconButton
-                    color='inherit'
-                    onClick={newTask}
-                >
-                    <AddIcon />
-                </IconButton>
-            </Tooltip>
-            <AccountCircleIcon />
+            <Button
+                variant="contained"
+                color="success"
+                onClick={reportsNew}
+            >
+                Nowy egzamin
+                <AddIcon/>
+            </Button>
+            <ExaminerIcon/>
         </Toolbar>
     </AppBar>
 );
