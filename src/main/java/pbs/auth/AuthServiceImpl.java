@@ -12,7 +12,6 @@ import pbs.examiner.Examiner;
 import pbs.examiner.ExaminerService;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -48,7 +47,7 @@ public class AuthServiceImpl implements AuthService{
         LOG.trace(">>>register");
         return examinerService.findByMail(registerRequest.mail())
                 .onItem().ifNotNull().failWith(() -> new AuthenticationCompletionException("Account with that email already exists"))
-                .onItem().ifNull().continueWith(() -> {
+                .onItem().transformToUni(ignore -> {
                     Examiner newEx = new Examiner();
                     newEx.mail = registerRequest.mail();
                     newEx.firstName = registerRequest.firstName();
@@ -56,10 +55,8 @@ public class AuthServiceImpl implements AuthService{
                     newEx.titles = registerRequest.titles();
                     newEx.roles = List.of("user");
                     newEx.setPassword(registerRequest.password());
-                    examinerService.add(newEx);
-                    return newEx;
-                })
-                .replaceWith(Uni.createFrom().voidItem()); // Return Uni<Void>
+                    return examinerService.add(newEx).replaceWithVoid();
+                });
     }
 
 }
