@@ -1,25 +1,37 @@
-import {Avatar, Box, Button, Container, Snackbar, TextField, Typography} from "@mui/material";
+import {
+    Avatar,
+    Box,
+    Button,
+    Container, FormControl,
+    InputLabel,
+    MenuItem,
+    Select,
+    Snackbar,
+    TextField,
+    Typography
+} from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import {useForm} from '../useForm';
 import React from "react";
 import {useDispatch} from "react-redux";
 import {useNavigate} from "react-router-dom";
-import {login} from "./redux";
+import {register} from "./redux";
 
 export const Register = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const {values, isValid, error, setError, onChange} = useForm({
+    const {values, setValue, isValid, error, setError, onChange} = useForm({
         initialValues: {mail: '', password: '', firstName: '', lastName: '', titles: ''}
     });
-    const sendLogin = () => {
+
+    const sendRegister = () => {
         if (isValid) {
-            dispatch(login({mail: values.mail, password: values.password}))
+            dispatch(register({mail: values.mail, password: values.password, firstName:  values.firstName, lastName: values.lastName, titles: values.titles}))
                 .then(({meta, payload}) => {
                     if (meta.requestStatus === 'fulfilled') {
-                        navigate('/');
+                        navigate('/login');
                     } else if (payload?.status === 401) {
-                        setError('Invalid credentials');
+                        setError('Konto o takim adresie email już istnieje');
                     } else {
                         setError('Error');
                     }
@@ -34,18 +46,26 @@ export const Register = () => {
                     <LockOutlinedIcon />
                 </Avatar>
                 <Typography component='h1' variant='h5'>
-                    Zaloguj się do apliakcji
+                    Zarejestruj się w aplikacji
                 </Typography>
                 <Box noValidate sx={{ mt: 1 }}>
-                    <TextField margin='normal' required fullWidth autoFocus
+                    <TextField margin='normal' required fullWidth autoFocus helperText="Adres musi pochodzić z domeny pbs.edu.pl"
                                label='Mail' name='mail' onChange={onChange} value={values.mail}
                     />
                     <TextField type='password' margin='normal' required fullWidth
                                label='Hasło' name='password' onChange={onChange} value={values.password}
-                               onKeyDown={e => e.key === 'Enter' && sendLogin()}
                     />
-                    <Button fullWidth variant='contained' onClick={sendLogin} sx={{ mt: 3, mb: 2 }}>
-                        Zaloguj się
+                    <TextField margin='normal' required fullWidth autoFocus
+                               label='Imię' name='firstName' onChange={onChange} value={values.firstName}
+                    />
+                    <TextField margin='normal' required fullWidth autoFocus
+                               label='Nazwisko' name='lastName' onChange={onChange} value={values.lastName}
+                    />
+                    <TextField margin='normal' required fullWidth autoFocus
+                               label='Tytuł' name='titles' onChange={onChange} value={values.titles}
+                    />
+                    <Button fullWidth variant='contained' onClick={sendRegister} sx={{ mt: 3, mb: 2 }}>
+                        Zarejestruj się
                     </Button>
                 </Box>
             </Box>

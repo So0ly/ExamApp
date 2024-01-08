@@ -5,14 +5,11 @@ import jakarta.annotation.security.RolesAllowed;
 import org.jboss.resteasy.reactive.RestForm;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 
 import java.io.File;
 import java.util.List;
-import java.util.Optional;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -75,11 +72,11 @@ public class StudentController {
 
     @POST
     @Path("/file")
-    @Operation(operationId = "addStudentsCSV",
+    @Operation(operationId = "parseStudentCSV",
             description = "Creates a list of students via an uploaded CSV file.")
     @Consumes("multipart/form-data")
     @Produces("application/json")
-    public Uni<List<Student>> addStudentCSV(@RestForm File file){
-        return studentService.addStudentsCSV(file);
+    public Uni<List<Student>> parseStudentCSV(@RestForm File file){
+        return studentService.parseStudentsCSV(file);
     }
 }

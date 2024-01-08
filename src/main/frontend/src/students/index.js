@@ -1,0 +1,1 @@
+export {studentApi} from './api';

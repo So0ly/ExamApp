@@ -6,6 +6,7 @@ plugins {
 repositories {
     mavenCentral()
     mavenLocal()
+    maven {url "https://jaspersoft.jfrog.io/jaspersoft/jaspersoft-repo"}
 }
 
 dependencies {
@@ -22,6 +23,7 @@ dependencies {
     implementation 'io.quarkus:quarkus-elytron-security-common:3.2.2.Final'
     implementation 'io.quarkus:quarkus-smallrye-jwt:3.2.2.Final'
     implementation 'io.quarkus:quarkus-smallrye-jwt-build:3.2.2.Final'
+    implementation 'net.sf.jasperreports:jasperreports:6.21.0'
     implementation 'org.apache.pdfbox:pdfbox:2.0.30'
     implementation 'com.opencsv:opencsv:5.7.1'
     compileOnly 'org.projectlombok:lombok:1.18.30'

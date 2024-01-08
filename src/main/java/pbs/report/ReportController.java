@@ -3,6 +3,10 @@ package pbs.report;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.security.RolesAllowed;
 import org.jboss.resteasy.reactive.ResponseStatus;
+import org.jboss.resteasy.reactive.RestForm;
+import pbs.model.IdList;
+import pbs.model.Question;
+import pbs.model.UrlResponse;
 import pbs.student.Student;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.*;
@@ -11,9 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import pbs.student.StudentService;
 
+import java.io.File;
 import java.util.*;
-
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -22,7 +25,6 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 public class ReportController {
 
     private final ReportService reportService;
-    private final StudentService studentService;
 
     @GET
     @Operation(operationId = "getAllReports",
@@ -62,6 +64,7 @@ public class ReportController {
     }
 
     @DELETE
+    @RolesAllowed("admin")
     @Operation(operationId = "deleteReport",
             description = "Remove a report. ADMIN only.")
     @Path("/{Id}")
@@ -79,11 +82,28 @@ public class ReportController {
         return reportService.update(report);
     }
 
-    @GET
+    @POST
     @Operation(operationId = "generatePdf")
     @Path("/generate")
-    public Uni<Void> generatePdf(){
-        Uni<List<Report>> reports = reportService.getAllReports();
-        return reportService.generatePDF(reports);
+    @Consumes("application/json")
+    public Uni<Response> generatePdf(IdList idList){
+        List<Long> ids = idList.ids();
+        Uni<List<Report>> reports = reportService.getReportsByIds(ids);
+        return reportService.generatePDF(reports)
+                .onItem().transform(url -> Response.ok(new UrlResponse(url)).build())
+                .onFailure().recoverWithItem(
+                        e -> Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                                .entity(e.getMessage()).build()
+                );
     }
+
+    @POST
+    @Path("/file")
+    @Operation(operationId = "parseQuestionCSV",
+            description = "Creates a list of questions via an uploaded CSV file.")
+    @Consumes("multipart/form-data")
+    @Produces("application/json")
+    public Uni<List<Question>> parseQuestionCSV(@RestForm File file) {return reportService.parseQuestionCSV(file);
+    }
+
 }

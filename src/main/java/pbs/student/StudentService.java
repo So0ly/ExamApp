@@ -13,6 +13,6 @@ public interface StudentService {
     Uni<Student> addStudent(Student student);
     Uni<Void> addStudents(List<Student> students);
     Uni<Student> update(Student student);
-    Uni<List<Student>> addStudentsCSV(File fileData);
+    Uni<List<Student>> parseStudentsCSV(File fileData);
 
 }

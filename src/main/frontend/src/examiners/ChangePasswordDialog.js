@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import {useForm} from '../useForm';
 import {closeChangePassword} from '../layout/redux';
-import {api} from './';
+import {examinerApi} from './';
 
 export const ChangePasswordDialog = () => {
     const {values, invalid, isValid, error, setError, clearForm, onChange} = useForm({
@@ -20,7 +20,7 @@ export const ChangePasswordDialog = () => {
     const dispatch = useDispatch();
     const changePasswordOpen = useSelector(state => state.layout.changePasswordOpen);
     const close = () => dispatch(closeChangePassword());
-    const [changePassword] = api.endpoints.changePassword.useMutation();
+    const [changePassword] = examinerApi.endpoints.changePassword.useMutation();
     const canSave = isValid && Boolean(values.currentPassword) && Boolean(values.newPassword);
     const save = () => {
         changePassword(values).then(({error}) => {

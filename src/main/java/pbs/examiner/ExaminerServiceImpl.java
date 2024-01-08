@@ -2,7 +2,6 @@ package pbs.examiner;
 
 import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
-import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.core.Response;
@@ -10,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.hibernate.ObjectNotFoundException;
 import jakarta.enterprise.context.ApplicationScoped;
+import org.jboss.logging.Logger;
 import pbs.report.Report;
 
 import java.util.List;
@@ -19,6 +19,7 @@ import java.util.List;
 public class ExaminerServiceImpl implements ExaminerService {
 
     private final JsonWebToken jwt;
+    private final static Logger LOG = Logger.getLogger(ExaminerServiceImpl.class);
 
     public Uni<List<Examiner>> list() {
         return Examiner.listAll();
@@ -36,13 +37,16 @@ public class ExaminerServiceImpl implements ExaminerService {
 
     @WithTransaction
     public Uni<Void> delete(Long id) {
-        return findById(id)
-                .chain(ex -> Uni.createFrom().item(
-                                        Report.delete("examiner.id", ex.id)
-                                )
-                                .chain(t -> ex.delete())
-                );
+        return Report.delete("examiner.id", id)
+                .chain(() -> findById(id))
+                .chain(ex -> {
+                    if (ex != null) {
+                        return ex.delete();
+                    }
+                    return Uni.createFrom().voidItem();
+                });
     }
+
 
     @WithTransaction
     public Uni<Examiner> add(Examiner examiner) {

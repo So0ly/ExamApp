@@ -5,6 +5,7 @@ import com.opencsv.exceptions.CsvException;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
+import lombok.NoArgsConstructor;
 import org.jboss.logging.Logger;
 
 import java.io.File;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
+@NoArgsConstructor
 public class StudentServiceImpl implements StudentService {
 
     private static final Logger LOG = Logger.getLogger(StudentServiceImpl.class);
@@ -53,7 +55,7 @@ public class StudentServiceImpl implements StudentService {
                 .chain(s -> s.merge(student));
     }
 
-    public Uni<List<Student>> addStudentsCSV(File fileData) {
+    public Uni<List<Student>> parseStudentsCSV(File fileData) {
         return Uni.createFrom().item(() -> {List<Student> students = new ArrayList<>();
         try (FileReader fileReader = new FileReader(fileData)) {
             try (CSVReader reader = new CSVReader(fileReader)) {
@@ -66,7 +68,6 @@ public class StudentServiceImpl implements StudentService {
         } catch (IOException e) {
             LOG.error(e);
         }
-        students.forEach(student -> LOG.trace(student.toString()));
         return students;
     });
     }

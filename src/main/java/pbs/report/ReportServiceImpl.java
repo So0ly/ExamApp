@@ -1,5 +1,7 @@
 package pbs.report;
 
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.security.UnauthorizedException;
 import io.smallrye.mutiny.Uni;
@@ -9,6 +11,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import pbs.examiner.ExaminerService;
@@ -16,22 +19,36 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 
 import org.jboss.logging.Logger;
+import pbs.model.Question;
+import pbs.student.Student;
+import pbs.student.StudentService;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 @RequiredArgsConstructor
 public class ReportServiceImpl implements ReportService{
 
     private static final Logger LOG = Logger.getLogger(ReportServiceImpl.class);
+    @ConfigProperty(name = "PDF_STORAGE_PATH")
+    String PDF_PATH;
+    @ConfigProperty(name = "PDF_ACCESS_URL_BASE")
+    String PDF_URL;
     private final ExaminerService examinerService;
+    private final StudentService studentService;
 
     public Uni<List<Report>> getAllReports(){
         LOG.trace("getAllReports");
@@ -41,8 +58,16 @@ public class ReportServiceImpl implements ReportService{
     @WithTransaction
     public Uni<Report> add(Report report) {
         LOG.trace("addReport");
-        return examinerService.getCurrentExaminer().
-                chain(examiner -> {
+        report.setFinalGrade();
+        String index = report.student.index;
+        return studentService.getStudentByIndex(index)
+                    .onItem().ifNull().switchTo(() -> studentService.addStudent(report.student))
+                    .chain(student -> {
+                        report.student = student;
+                        return examinerService.getCurrentExaminer();
+                    })
+                    .chain(examinerService::getCurrentExaminer)
+                    .chain(examiner -> {
                     report.examiner = examiner;
                     return report.persistAndFlush();
                 });
@@ -59,6 +84,13 @@ public class ReportServiceImpl implements ReportService{
                             }
                         }));
     }
+
+    public Uni<List<Report>> getReportsByIds(List<Long> ids) {
+        LOG.trace("getReportsByIds");
+        return examinerService.getCurrentExaminer()
+                .chain(user -> Report.list("id in ?1 and examiner = ?2", ids, user));
+    }
+
 
     public Uni<List<Report>> getExaminerReports() {
         LOG.trace("getExaminerReports");
@@ -83,7 +115,24 @@ public class ReportServiceImpl implements ReportService{
                 .chain(s -> s.merge(report));
     }
 
-    public Uni<Void> generatePDF(Uni<List<Report>> reportList){
+    public Uni<List<Question>> parseQuestionCSV(File fileData) {
+        return Uni.createFrom().item(() -> {List<Question> questions = new ArrayList<>();
+            try (FileReader fileReader = new FileReader(fileData)) {
+                try (CSVReader reader = new CSVReader(fileReader)) {
+                    questions = reader.readAll().stream().map(row -> new Question(row[0])).toList();
+                } catch (CsvException e) {
+                    LOG.error(e);
+                }
+            } catch (FileNotFoundException e) {
+                LOG.error(e);
+            } catch (IOException e) {
+                LOG.error(e);
+            }
+            return questions;
+        });
+    }
+
+    public Uni<String> generatePDF(Uni<List<Report>> reportList){
         return reportList
                 .onItem()
                 .transformToUni(reports -> {
@@ -101,8 +150,10 @@ public class ReportServiceImpl implements ReportService{
                                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                                     reporter
                             );
-                            pdDocument.save(fileName);
-                            return Uni.createFrom().item(reports);
+                            String filePath = PDF_PATH + "/" + fileName;
+                            pdDocument.save(filePath);
+                            LOG.info("PDF file generated: " + filePath);
+                            return Uni.createFrom().item(fileName);
                         } catch (IOException e) {
                             LOG.trace(e.getStackTrace());
                             LOG.error(e.getMessage());
@@ -110,40 +161,10 @@ public class ReportServiceImpl implements ReportService{
                         }
                     } else {
                         LOG.warn("Report list is empty. PDF generation aborted");
-                        return Uni.createFrom().item(reports);
+                        return Uni.createFrom().nullItem();
                     }
-                })
-                .onItem()
-                .ignore().andContinueWithNull();
+                });
     }
-//        try (PDDocument pdDocument = new PDDocument()){
-//            if (!reportList.subscribe().asCompletionStage().get().isEmpty()) {
-//                String reporter = reportList.subscribe().asCompletionStage().get().get(0).examiner.id.toString();
-//                reportList.await().indefinitely().forEach(report -> {
-//                    PDPage page = new PDPage();
-//                    pdDocument.addPage(page);
-//                    addPageFromTemplate(pdDocument, report, page, reporter);
-//                });
-//                String fileName = String.format("%s-%s.pdf", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), reporter);
-//                pdDocument.save(fileName);
-//            } else {
-//                LOG.warn("Report list is empty. PDF generation aborted");
-//            }
-//        } catch (IOException e){
-//            LOG.trace(e.getStackTrace());
-//            LOG.error(e.getMessage());
-//            throw new RuntimeException(e);
-//        } catch (ExecutionException e) {
-//            LOG.trace(e.getStackTrace());
-//            LOG.error(e.getMessage());
-//            throw new RuntimeException(e);
-//        } catch (InterruptedException e) {
-//            LOG.trace(e.getStackTrace());
-//            LOG.error(e.getMessage());
-//            throw new RuntimeException(e);
-//        }
-//        return Uni.createFrom().voidItem();
-//    }
 
     private void addPageFromTemplate(PDDocument pdDocument, Report report, PDPage page, String reporter) {
         try (PDPageContentStream contentStream = new PDPageContentStream(pdDocument, page)) {
@@ -183,6 +204,8 @@ public class ReportServiceImpl implements ReportService{
                 }
             });
             contentStream.showText("Ocena końcowa: " + report.finalGrade);
+            contentStream.newLine();
+            contentStream.showText("Czas trwania: " + report.examDuration);
             contentStream.newLine();
             contentStream.showText("Egzaminator: " + report.examiner.toString());
             contentStream.endText();

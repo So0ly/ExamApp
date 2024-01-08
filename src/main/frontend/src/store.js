@@ -1,14 +1,19 @@
 import {combineReducers, configureStore} from '@reduxjs/toolkit';
-import {logout, reducer as authReducer} from './auth';
-import {reducer as layoutReducer} from './layout';
-import {api as examinerApi} from './examiners';
-import {api as reportApi} from './reports/api';
+import {logout, authReducer} from './auth';
+import {layoutReducer} from './layout';
+import {examReducer} from './exam';
+import {examinerApi} from './examiners';
+import {reportApi} from './reports';
+import {studentApi} from "./students";
+
 
 const appReducer = combineReducers({
     auth: authReducer,
     layout: layoutReducer,
+    exam: examReducer,
     [examinerApi.reducerPath]: examinerApi.reducer,
-    [reportApi.reducerPath]: reportApi.reducer
+    [reportApi.reducerPath]: reportApi.reducer,
+    [studentApi.reducerPath]: studentApi.reducer
 });
 
 const rootReducer = (state, action) => {
@@ -23,4 +28,5 @@ export const store = configureStore({
     middleware: getDefaultMiddleware => getDefaultMiddleware()
         .concat(examinerApi.middleware)
         .concat(reportApi.middleware)
+        .concat(studentApi.middleware)
 });

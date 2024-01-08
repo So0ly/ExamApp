@@ -5,7 +5,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import KeyIcon from '@mui/icons-material/Key';
 import LogoutIcon from '@mui/icons-material/Logout';
 import {logout} from '../auth';
-import {api} from '../examiners';
+import {examinerApi} from '../examiners';
 import {openChangePassword} from './redux';
 
 export const ExaminerIcon = () => {
@@ -13,7 +13,7 @@ export const ExaminerIcon = () => {
     const menuOpen = Boolean(anchorEl);
     const closeMenu = () => setAnchorEl(null);
     const dispatch = useDispatch();
-    const {data} = api.endpoints.getSelf.useQuery();
+    const {data} = examinerApi.endpoints.getSelf.useQuery();
     return (
         <>
             <Tooltip title='Profile'>

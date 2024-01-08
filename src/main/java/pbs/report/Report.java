@@ -2,6 +2,7 @@ package pbs.report;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.quarkus.hibernate.reactive.panache.PanacheEntity;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -18,7 +19,10 @@ import java.util.Map;
 @Entity
 @NoArgsConstructor
 @Table(name = "reports")
-public class Report extends PanacheEntity {
+public class Report extends PanacheEntityBase {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
     @ManyToOne(optional = false)
     public Student student;
     public String className;
@@ -32,6 +36,8 @@ public class Report extends PanacheEntity {
     @CreationTimestamp
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     public LocalDateTime examDate;
+
+    public String examDuration;
 
     @ManyToOne(optional = false)
     public Examiner examiner;

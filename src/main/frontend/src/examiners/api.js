@@ -1,7 +1,7 @@
 import {createApi} from '@reduxjs/toolkit/query/react';
 import {authBaseQuery} from '../auth';
 
-export const api = createApi({
+export const examinerApi = createApi({
     reducerPath: 'examiners',
     baseQuery: authBaseQuery({path: 'examiner'}),
     tagTypes: ['Examiner'],

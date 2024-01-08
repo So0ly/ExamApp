@@ -13,7 +13,8 @@ export const useForm = ({initialValues = {}}) => {
         setInvalid({...invalid, [name]: !event.currentTarget.checkValidity()});
         setValue(name, value);
     };
-    const isValid = Object.values(invalid).every(value => value === false);
+    const isValid = Object.values(invalid).every(value => value === false) &&
+        (!!(values.mail && values.mail.endsWith('@pbs.edu.pl')));
     const clearForm = () => {
         setValues(initialValues);
         setInvalid({});
