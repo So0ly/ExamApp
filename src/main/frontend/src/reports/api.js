@@ -22,6 +22,14 @@ export const reportApi = createApi({
             }),
             invalidatesTags: ['Report'],
         }),
+        addAudio: builder.mutation({
+            query: (formData) => ({
+                url: '/audio/',
+                method: 'POST',
+                body: formData
+            }),
+            invalidatesTags: ['Report'],
+        }),
         deleteReport: builder.mutation({
             query: report => ({
                 url: `/${report.id}`,
@@ -46,7 +54,15 @@ export const reportApi = createApi({
             invalidatesTags: ['Report'],
         }),
         getPDF: builder.query({
-            query: filename => `/pdf/${filename}`,
+            query: filename => ({
+                url: `/pdf/${filename}`,
+                responseHandler: async (response) => {
+                    if (!response.ok) {
+                        throw new Error('Server error');
+                    }
+                    return response.blob();
+                },
+            }),
         }),
         questionCSV: builder.mutation({
             query: file => ({

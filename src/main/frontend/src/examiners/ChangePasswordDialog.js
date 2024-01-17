@@ -28,9 +28,9 @@ export const ChangePasswordDialog = () => {
                 clearForm();
                 close();
             } else if (error?.status === 409) {
-                setError('Current password is incorrect');
+                setError('Aktualne hasło jest niepoprawne');
             } else {
-                setError('Unknown error, please try again');
+                setError('Error');
             }
         });
     };
@@ -39,12 +39,12 @@ export const ChangePasswordDialog = () => {
             <DialogTitle>Zmień hasło</DialogTitle>
             <DialogContent>
                 {Boolean(error) && <Alert severity='error'>{error}</Alert>}
-                <TextField type='password' fullWidth margin='dense' variant='standard' label='Current password'
+                <TextField type='password' fullWidth margin='dense' variant='standard' label='Aktualne hasło'
                            name='currentPassword' value={values.currentPassword} onChange={onChange}
                            required error={Boolean(invalid.currentPassword)}
                            autoFocus
                 />
-                <TextField type='password' fullWidth margin='dense' variant='standard' label='New password'
+                <TextField type='password' fullWidth margin='dense' variant='standard' label='Nowe hasło'
                            name='newPassword' value={values.newPassword} onChange={onChange}
                            required error={Boolean(invalid.newPassword)}
                 />

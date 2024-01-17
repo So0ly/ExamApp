@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface ReportService {
     Uni<List<Report>> getAllReports();
     Uni<Report> add(Report report);
+    Uni<Report> addAudio(Long id, File audio);
     Uni<Report> getReportById(Long id);
     Uni<List<Report>> getReportsByIds(List<Long> ids);
     Uni<List<Report>> getExaminerReports();

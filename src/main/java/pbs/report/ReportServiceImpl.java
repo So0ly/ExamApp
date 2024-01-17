@@ -47,6 +47,13 @@ public class ReportServiceImpl implements ReportService{
     String PDF_PATH;
     @ConfigProperty(name = "PDF_ACCESS_URL_BASE")
     String PDF_URL;
+
+    @ConfigProperty(name = "AUDIO_STORAGE_PATH")
+    Path AUDIO_PATH;
+
+    @ConfigProperty(name = "AUDIO_ACCESS_URL_BASE")
+    String AUDIO_URL;
+
     private final ExaminerService examinerService;
     private final StudentService studentService;
 
@@ -70,6 +77,37 @@ public class ReportServiceImpl implements ReportService{
                     .chain(examiner -> {
                     report.examiner = examiner;
                     return report.persistAndFlush();
+                });
+    }
+
+    @WithTransaction
+    public Uni<Report> addAudio(Long id, File audio) {
+        LOG.info("addAudio");
+        return examinerService.getCurrentExaminer()
+                .chain(user -> Report.<Report>findById(id)
+                        .onItem().ifNull().failWith(() -> new ObjectNotFoundException(id, "Report"))
+                        .onItem().invoke(report -> {
+                            if (!user.equals(report.examiner)) {
+                                throw new UnauthorizedException("You are not allowed to update this project");
+                            }
+                        }))
+                .chain(report -> {
+                    String fileName = String.format(
+                            "%s-%s.wav",
+                            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                            id
+                    );
+                        Path audioPath = AUDIO_PATH.resolve(fileName);
+                        LOG.info("AudioPath" + audioPath.toString());
+                        LOG.info("Audio" + audio.toString() + "|||" + audio.getAbsolutePath());
+                        try {
+                            Files.copy(audio.toPath(), audioPath);
+                            report.audioURL = audioPath.toString(); //TODO
+                            return report.persistAndFlush();
+                        } catch (Exception e) {
+                            LOG.error("Error saving audio file", e);
+                            throw new RuntimeException("Error saving audio file", e);
+                        }
                 });
     }
 

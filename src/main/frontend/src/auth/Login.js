@@ -1,10 +1,11 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {redirect, useNavigate} from 'react-router-dom';
 import {Avatar, Box, Button, Container, Snackbar, TextField, Typography} from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import {useDispatch} from 'react-redux';
 import {login} from './redux';
 import {useForm} from '../useForm';
+import Cookies from "js-cookie";
 
 export const Login = () => {
     const dispatch = useDispatch();
@@ -12,6 +13,14 @@ export const Login = () => {
     const {values, isValid, error, setError, onChange} = useForm({
         initialValues: {mail: '', password: ''}
     });
+
+    useEffect(() => {
+        const jwt = Cookies.get('jwt');
+        if (jwt) {
+            navigate('/reports');
+        }
+    }, [navigate]);
+
     const sendLogin = () => {
         if (isValid) {
             dispatch(login({mail: values.mail, password: values.password}))

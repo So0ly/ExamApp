@@ -1,7 +1,7 @@
 import {Layout} from "../layout";
 import {useDispatch, useSelector} from "react-redux";
 import {Box, Button, Checkbox, Container, Grid, Typography} from "@mui/material";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {KeyboardDoubleArrowLeft, KeyboardDoubleArrowRight} from '@mui/icons-material';
 import {finishExam} from "./redux";
 import {reportApi} from "../reports";
@@ -12,15 +12,22 @@ import {GradeRadio} from "./GradeRadio";
 export const Exam = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const audioChunksRef = useRef([]);
     const {currentExam, currentStudent, selectedQuestionList, questionTime} = useSelector(state => state.exam);
     const [currentQuestionPtr, setCurrentQuestionPtr] = useState(0);
     const [isExam, setIsExam] = useState(false);
+    const [isAfterExam, setIsAfterExam] = useState(false);
     const [startTime, setStartTime] = useState(null);
     const [isPermission, setIsPermission] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
     const [audioData, setAudioData] = useState(null);
     const [mediaRecorder, setMediaRecorder] = useState(null);
+    const [finalGrade, setFinalGrade] = useState(0);
+    const [reportId, setReportId] = useState(null);
     const [addReport] = reportApi.endpoints.addReport.useMutation();
+    const [addAudio] = reportApi.endpoints.addAudio.useMutation();
+
+
 
     const [selectedGrade, setSelectedGrade] = useState("5");
     const [questionsGrades, setQuestionsGrades] = useState({});
@@ -43,6 +50,19 @@ export const Exam = () => {
             });
         }
     }, []);
+
+    useEffect(() => {
+        const sendAudioData = async () => {
+            if (audioData && reportId) {
+                const formData = new FormData();
+                formData.append('audio', audioData);
+                formData.append('id', reportId);
+                await addAudio(formData);
+            }
+        };
+
+        sendAudioData();
+    }, [audioData, reportId]);
 
     const handleNextQuestion = () => {
         if (currentQuestionPtr < selectedQuestionList.length - 1) {
@@ -81,21 +101,18 @@ export const Exam = () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const mediaRecorder = new MediaRecorder(stream);
-                const audioChunks = [];
 
                 mediaRecorder.ondataavailable = event => {
-                    audioChunks.push(event.data);
+                    audioChunksRef.current.push(event.data);
                 };
 
                 mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
                     setAudioData(audioBlob);
-                    console.log("BBB")
                 };
 
                 mediaRecorder.start();
                 setIsRecording(true);
-
                 setMediaRecorder(mediaRecorder);
             } catch (error) {
                 console.error('Error starting audio recording:', error);
@@ -130,24 +147,31 @@ export const Exam = () => {
             "questions": updatedGrades,
             examDuration: finishStr
         };
-        await addReport(report);
-        dispatch(finishExam());
-        navigate('/reports/new');
+        const response = await addReport(report).unwrap();
+        setReportId(response.id);
+        setFinalGrade(response.finalGrade);
+        setIsExam(false);
+        setIsAfterExam(true);
     };
 
     const handleGradeChange = (event) => {
         setSelectedGrade(event.target.value);
     };
 
+    const handleExitExam = () => {
+        dispatch(finishExam());
+        navigate('/reports/new');
+    }
+
     return (
         <Layout>
-            {!isExam && (
+            {!isExam && !isAfterExam && (
                 <Container sx={{ mt: 2 }}>
                     <Grid container spacing={2} justifyContent="space-evenly" direction={"column"} alignItems="center">
                         <Grid item><Typography variant={"h1"} color={"primary"}>Egzamin z przedmiotu:</Typography></Grid>
-                        <Grid item><Typography variant={"h1"} color={"primary"}>{currentExam}</Typography></Grid>
+                        <Grid item><Typography variant={"h1"} color={"primary"} align={"center"}>{currentExam}</Typography></Grid>
                         <Grid item><Typography variant={"h3"}>Egzaminowany: {currentStudent.firstName} {currentStudent.lastName} - {currentStudent.index}</Typography></Grid>
-                        <Grid item><Typography variant={"h3"}>Ilość pytań: {selectedQuestionList.length}</Typography></Grid>
+                        <Grid item><Typography variant={"h3"}>Liczba pytań: {selectedQuestionList.length}</Typography></Grid>
                         <Grid item><Typography variant={"h3"}>Ilość czasu na pytanie: {questionTime}</Typography></Grid>
                         <Grid item><Typography variant={"h3"}>Powodzenia!</Typography></Grid>
                         <Grid item><Button variant={"contained"} onClick={handleStart}>Rozpocznij egzamin</Button></Grid>
@@ -208,6 +232,15 @@ export const Exam = () => {
                         {({ remainingTime }) => <Typography variant="h4">{remainingTime}</Typography>}
                     </CountdownCircleTimer>
                 </Box>
+            </Container>
+        )}
+        {isAfterExam && (
+            <Container sx={{ mt: 2 }}>
+                <Grid container spacing={2} justifyContent="space-evenly" direction={"column"} alignItems="center">
+                    <Grid item><Typography variant={"h1"} color={"primary"}>Twoja ocena:</Typography></Grid>
+                    <Grid item><Typography variant={"h1"}>{finalGrade}</Typography></Grid>
+                    <Grid item><Button variant={"contained"} onClick={handleExitExam}>Zakończ egzamin</Button></Grid>
+                </Grid>
             </Container>
         )}
         </Layout>

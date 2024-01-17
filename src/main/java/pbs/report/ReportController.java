@@ -63,6 +63,16 @@ public class ReportController {
         return reportService.add(report);
     }
 
+    @POST
+    @Path("/audio")
+    @Operation(operationId = "addAudio",
+            description = "Adds audio to a report.")
+    @ResponseStatus(201)
+    @Consumes("multipart/form-data")
+    public Uni<Report> addAudio(@RestForm File audio, @RestForm Long id) {
+        return reportService.addAudio(id, audio);
+    }
+
     @DELETE
     @RolesAllowed("admin")
     @Operation(operationId = "deleteReport",

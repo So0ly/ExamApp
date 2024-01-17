@@ -44,15 +44,20 @@ export const ReportsNew = () => {
 
     const handleAppendStudentList = (formData) => {
         const arrayified = Array.isArray(formData) ? formData : [formData];
-        dispatch(setCurrentStudent(arrayified[0]));
-        dispatch(setStudentList([...studentList, ...arrayified]));
+        const existingIndexes = new Set(studentList.map(student => student.index));
+        const filtered = arrayified.filter(student => !existingIndexes.has(student.index));
+        dispatch(setStudentList([...studentList, ...filtered]));
+        dispatch(setCurrentStudent(filtered[0]));
     };
 
     const handleAppendQuestionList = (formData) => {
         const arrayified = Array.isArray(formData) ? formData : [formData];
         const questions = arrayified.map(item => item.question);
-        dispatch(setQuestionList([...uploadedQuestionList, ...questions]));
-        dispatch(setSelectedQuestionList([...selectedQuestionList, ...questions]));
+        const existingQuestions = new Set(uploadedQuestionList);
+        const filtered = questions.filter(question => !existingQuestions.has(question));
+
+        dispatch(setQuestionList([...uploadedQuestionList, ...filtered]));
+        dispatch(setSelectedQuestionList([...selectedQuestionList, ...filtered]));
     };
 
     const handleFileChange = async (e) => {
@@ -169,7 +174,7 @@ export const ReportsNew = () => {
     return (
         <Layout>
             <PopUp title={"Błąd"} popUpMsg={errorPopUpMsg} open={showErrorPopUp} close={() => handleClosePopUp(setShowErrorPopUp)}/>
-            <PopUp title={"Wylosuj pytania"} popUpMsg={"Wylosuj daną ilość pytań:"} open={showRandomPopUp} close={() => handleClosePopUp(setShowRandomPopUp)}>
+            <PopUp title={"Wylosuj pytania"} popUpMsg={"Wylosuj daną liczbę pytań:"} open={showRandomPopUp} close={() => handleClosePopUp(setShowRandomPopUp)}>
                 <TextField placeholder={"Podaj liczbę"} onChange={handleChooseRandom}/>
                 <Button variant={"contained"} onClick={handleAcceptRandom} sx={{ mt: 2 }}>Akceptuj</Button>
             </PopUp>

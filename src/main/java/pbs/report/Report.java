@@ -38,6 +38,7 @@ public class Report extends PanacheEntityBase {
     public LocalDateTime examDate;
 
     public String examDuration;
+    public String audioURL;
 
     @ManyToOne(optional = false)
     public Examiner examiner;
