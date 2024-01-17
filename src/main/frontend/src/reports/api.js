@@ -64,6 +64,17 @@ export const reportApi = createApi({
                 },
             }),
         }),
+        getAudio: builder.query({
+            query: filename => ({
+                url: `/audio/${filename}`,
+                responseHandler: async (response) => {
+                    if (!response.ok) {
+                        throw new Error('Server error');
+                    }
+                    return response.blob();
+                },
+            }),
+        }),
         questionCSV: builder.mutation({
             query: file => ({
                 url: `/file`,

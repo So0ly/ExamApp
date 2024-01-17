@@ -25,7 +25,11 @@ const rootReducer = (state, action) => {
 
 export const store = configureStore({
     reducer: rootReducer,
-    middleware: getDefaultMiddleware => getDefaultMiddleware()
+    middleware: getDefaultMiddleware => getDefaultMiddleware({
+        serializableCheck: {
+            ignoredActions: ['reports/executeQuery/fulfilled'], // Add ignored actions here
+        },
+    })
         .concat(examinerApi.middleware)
         .concat(reportApi.middleware)
         .concat(studentApi.middleware)

@@ -93,8 +93,9 @@ public class ReportController {
     }
 
     @POST
-    @Operation(operationId = "generatePdf")
     @Path("/generate")
+    @Operation(operationId = "generatePDF",
+            description = "Generates a PDF report")
     @Consumes("application/json")
     public Uni<Response> generatePdf(IdList idList){
         List<Long> ids = idList.ids();
@@ -105,6 +106,24 @@ public class ReportController {
                         e -> Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                                 .entity(e.getMessage()).build()
                 );
+    }
+
+    @GET
+    @Path("/pdf/{filename}")
+    @Produces("application/pdf")
+    @Operation(operationId = "downloadPDF",
+            description = "Used to download a generated PDF file.")
+    public Uni<Response> downloadPDF(@PathParam("filename") String filename){
+        return reportService.getFile(filename, "PDF");
+    }
+
+    @GET
+    @Path("/audio/{filename}")
+    @Produces("audio/mpeg")
+    @Operation(operationId = "downloadAudio",
+            description = "Used to download an audio recording of the exam.")
+    public Uni<Response> downloadAudio(@PathParam("filename") String filename) {
+        return reportService.getFile(filename, "Audio");
     }
 
     @POST

@@ -23,6 +23,8 @@ export const Reports = () => {
     const {data: reports} = reportApi.endpoints.getReports.useQuery(undefined);
     const [deleteReport] = reportApi.endpoints.deleteReport.useMutation();
     const [generateReport] = reportApi.endpoints.generateReport.useMutation();
+    const [getPDF] = reportApi.endpoints.getPDF.useLazyQuery();
+    const [getAudio] = reportApi.endpoints.getAudio.useLazyQuery();
 
     const [order, setOrder] = useState('desc');
     const [orderBy, setOrderBy] = useState('examDate');
@@ -87,14 +89,33 @@ export const Reports = () => {
     const handleReportButtonClick = async () => {
         try {
             const response = await generateReport({ ids: selected }).unwrap();
-            const pdfUrl = response.url;
-            const pdfLink = `${process.env.REACT_APP_API_URL}/report/pdf/${pdfUrl}`;
+            const fileResponse = await getPDF(response.url);
+            const blobby = fileResponse.data;
+            const fileURL = window.URL.createObjectURL(blobby);
             const link = document.createElement('a');
-            link.href = pdfLink;
-            link.setAttribute('download', '');
+            link.href = fileURL;
+            link.setAttribute('download', response.url);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            window.URL.revokeObjectURL(fileURL);
+        } catch (error) {
+            console.error("Failed to generate report: ", error);
+        }
+    };
+
+    const handleAudioButtonClick = async (fileName) => {
+        try {
+            const fileResponse = await getAudio(fileName);
+            const blobby = fileResponse.data;
+            const fileURL = window.URL.createObjectURL(blobby);
+            const link = document.createElement('a');
+            link.href = fileURL;
+            link.setAttribute('download', fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(fileURL);
         } catch (error) {
             console.error("Failed to generate report: ", error);
         }

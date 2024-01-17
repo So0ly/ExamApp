@@ -5,6 +5,7 @@ import com.opencsv.exceptions.CsvException;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.security.UnauthorizedException;
 import io.smallrye.mutiny.Uni;
+import jakarta.ws.rs.core.Response;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -44,7 +45,7 @@ public class ReportServiceImpl implements ReportService{
 
     private static final Logger LOG = Logger.getLogger(ReportServiceImpl.class);
     @ConfigProperty(name = "PDF_STORAGE_PATH")
-    String PDF_PATH;
+    Path PDF_PATH;
     @ConfigProperty(name = "PDF_ACCESS_URL_BASE")
     String PDF_URL;
 
@@ -82,7 +83,7 @@ public class ReportServiceImpl implements ReportService{
 
     @WithTransaction
     public Uni<Report> addAudio(Long id, File audio) {
-        LOG.info("addAudio");
+        LOG.trace(">>>addAudio");
         return examinerService.getCurrentExaminer()
                 .chain(user -> Report.<Report>findById(id)
                         .onItem().ifNull().failWith(() -> new ObjectNotFoundException(id, "Report"))
@@ -98,11 +99,9 @@ public class ReportServiceImpl implements ReportService{
                             id
                     );
                         Path audioPath = AUDIO_PATH.resolve(fileName);
-                        LOG.info("AudioPath" + audioPath.toString());
-                        LOG.info("Audio" + audio.toString() + "|||" + audio.getAbsolutePath());
                         try {
                             Files.copy(audio.toPath(), audioPath);
-                            report.audioURL = audioPath.toString(); //TODO
+                            report.audioURL = fileName;
                             return report.persistAndFlush();
                         } catch (Exception e) {
                             LOG.error("Error saving audio file", e);
@@ -188,8 +187,8 @@ public class ReportServiceImpl implements ReportService{
                                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                                     reporter
                             );
-                            String filePath = PDF_PATH + "/" + fileName;
-                            pdDocument.save(filePath);
+                            Path filePath = PDF_PATH.resolve(fileName);
+                            pdDocument.save(filePath.toFile());
                             LOG.info("PDF file generated: " + filePath);
                             return Uni.createFrom().item(fileName);
                         } catch (IOException e) {
@@ -256,6 +255,24 @@ public class ReportServiceImpl implements ReportService{
             throw new RuntimeException(e);
         }
 
+    }
+
+    public Uni<Response> getFile(String filename, String fileType) {
+        Path path;
+        if (fileType.equals("PDF")){
+            path = PDF_PATH;
+        } else {
+            path = AUDIO_PATH;
+        }
+        File file = new File(path + "/" + filename);
+        if (file.exists()) {
+            LOG.info("File found: " + file.getPath());
+            return Uni.createFrom().item(Response.ok(file)
+                    .header("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"")
+                    .build());
+        } else {
+            return Uni.createFrom().failure(new FileNotFoundException("File not found"));
+        }
     }
 
 }
