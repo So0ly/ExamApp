@@ -22,10 +22,10 @@ INSERT INTO "students" ("firstname", "lastname", "index")
 VALUES ('Jan', 'Kowalski', '222222')
     ON CONFLICT DO NOTHING;
 INSERT INTO "reports" ("student_id", "examiner_id", "classname", "examdate", "finalgrade", "examduration")
-VALUES (1, 2, 'Mikroprocesory', NOW(), 4, '15s')
+VALUES (1, 2, 'Mikroprocesory', NOW(), 4, '0m 15s')
     ON CONFLICT DO NOTHING;
 INSERT INTO "reports" ("student_id", "examiner_id", "classname", "examdate", "finalgrade", "examduration")
-VALUES (2, 2, 'Przetwarzanie obrazów', NOW(), 4, '1m')
+VALUES (2, 2, 'Przetwarzanie obrazów', NOW(), 4, '1m 0s')
     ON CONFLICT DO NOTHING;
 INSERT INTO "reports" ("student_id", "examiner_id", "classname", "examdate", "finalgrade", "examduration")
 VALUES (2, 3, 'Przetwarzanie obrazów', NOW(), 4, '1m 20s')
