@@ -4,7 +4,6 @@ import io.quarkus.elytron.security.common.BcryptUtil;
 import io.smallrye.mutiny.Uni;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ExaminerService {
     Uni<List<Examiner>> list();

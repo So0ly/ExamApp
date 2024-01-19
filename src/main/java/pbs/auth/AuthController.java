@@ -6,7 +6,6 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import lombok.RequiredArgsConstructor;
-import pbs.examiner.Examiner;
 
 @Path("/auth")
 @PermitAll

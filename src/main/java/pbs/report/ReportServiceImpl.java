@@ -21,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 
 import org.jboss.logging.Logger;
 import pbs.model.Question;
-import pbs.student.Student;
 import pbs.student.StudentService;
 
 import java.io.File;
@@ -35,9 +34,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -46,14 +43,9 @@ public class ReportServiceImpl implements ReportService{
     private static final Logger LOG = Logger.getLogger(ReportServiceImpl.class);
     @ConfigProperty(name = "PDF_STORAGE_PATH")
     Path PDF_PATH;
-    @ConfigProperty(name = "PDF_ACCESS_URL_BASE")
-    String PDF_URL;
 
     @ConfigProperty(name = "AUDIO_STORAGE_PATH")
     Path AUDIO_PATH;
-
-    @ConfigProperty(name = "AUDIO_ACCESS_URL_BASE")
-    String AUDIO_URL;
 
     private final ExaminerService examinerService;
     private final StudentService studentService;
@@ -179,7 +171,7 @@ public class ReportServiceImpl implements ReportService{
                             reports.forEach(report -> {
                                 PDPage page = new PDPage();
                                 pdDocument.addPage(page);
-                                addPageFromTemplate(pdDocument, report, page, reporter);
+                                addPageFromTemplate(pdDocument, report, page);
                             });
 
                             String fileName = String.format(
@@ -203,7 +195,7 @@ public class ReportServiceImpl implements ReportService{
                 });
     }
 
-    private void addPageFromTemplate(PDDocument pdDocument, Report report, PDPage page, String reporter) {
+    private void addPageFromTemplate(PDDocument pdDocument, Report report, PDPage page) {
         try (PDPageContentStream contentStream = new PDPageContentStream(pdDocument, page)) {
             URL imgURL = ReportServiceImpl.class.getClassLoader().getResource("/imgs/PBSlogo.png");
             if (imgURL != null) {
@@ -230,10 +222,10 @@ public class ReportServiceImpl implements ReportService{
             contentStream.showText("Nazwa przedmiotu: "+ report.className);
             contentStream.newLine();
             Integer[] iter = {1};
-            Uni<Map<String,Float>> questions = Mutiny.fetch(report.questions);
-            questions.subscribe().asCompletionStage().get().forEach((question, grade) ->{
+            Uni<List<ReportQuestions>> questions = Mutiny.fetch(report.reportQuestions);
+            questions.subscribe().asCompletionStage().get().forEach((question) ->{
                 try {
-                    contentStream.showText(iter[0].toString() + ". " + question + " - " + grade);
+                    contentStream.showText(iter[0].toString() + ". " + question.getQuestion() + " - " + question.getGrade());
                     contentStream.newLine();
                     iter[0]++;
                 } catch (IOException e) {
@@ -245,6 +237,10 @@ public class ReportServiceImpl implements ReportService{
             contentStream.showText("Czas trwania: " + report.examDuration);
             contentStream.newLine();
             contentStream.showText("Egzaminator: " + report.examiner.toString());
+            contentStream.newLineAtOffset(20, -450);
+            contentStream.showText(".".repeat(40) + " ".repeat(65) + ".".repeat(40));
+            contentStream.newLine();
+            contentStream.showText("  (Podpis egzaminatora)" + " ".repeat(72) + "(Podpis studenta)");
             contentStream.endText();
         } catch (IOException e) {
             LOG.trace(e.getStackTrace());

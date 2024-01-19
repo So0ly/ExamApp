@@ -7,13 +7,11 @@ import org.jboss.resteasy.reactive.RestForm;
 import pbs.model.IdList;
 import pbs.model.Question;
 import pbs.model.UrlResponse;
-import pbs.student.Student;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.openapi.annotations.Operation;
-import pbs.student.StudentService;
 
 import java.io.File;
 import java.util.*;

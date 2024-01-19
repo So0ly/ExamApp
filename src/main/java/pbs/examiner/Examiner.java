@@ -1,7 +1,6 @@
 package pbs.examiner;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.quarkus.hibernate.reactive.panache.PanacheEntity;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;

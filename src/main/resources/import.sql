@@ -30,21 +30,21 @@ VALUES (2, 2, 'Przetwarzanie obrazów', NOW(), 4, '1m 0s')
 INSERT INTO "reports" ("student_id", "examiner_id", "classname", "examdate", "finalgrade", "examduration")
 VALUES (2, 3, 'Przetwarzanie obrazów', NOW(), 4, '1m 20s')
 ON CONFLICT DO NOTHING;
-INSERT INTO "questions" ("reportid", "question", "questionscore")
+INSERT INTO "questions" ("reportid", "question", "grade")
 VALUES (1, 'Co to HAL_Delay?', 3.5)
     ON CONFLICT DO NOTHING;
-INSERT INTO "questions" ("reportid", "question", "questionscore")
+INSERT INTO "questions" ("reportid", "question", "grade")
 VALUES (1, 'Omów w jaki sposób STM32 i czyste C jest lepsze od konkurencji.', 4)
     ON CONFLICT DO NOTHING;
-INSERT INTO "questions" ("reportid", "question", "questionscore")
+INSERT INTO "questions" ("reportid", "question", "grade")
 VALUES (2, 'Co to percepcja?', 3.5)
     ON CONFLICT DO NOTHING;
-INSERT INTO "questions" ("reportid", "question", "questionscore")
+INSERT INTO "questions" ("reportid", "question", "grade")
 VALUES (2, 'Co to translacja?', 4)
     ON CONFLICT DO NOTHING;
-INSERT INTO "questions" ("reportid", "question", "questionscore")
+INSERT INTO "questions" ("reportid", "question", "grade")
 VALUES (3, 'Omów macierz translacji', 3.5)
 ON CONFLICT DO NOTHING;
-INSERT INTO "questions" ("reportid", "question", "questionscore")
+INSERT INTO "questions" ("reportid", "question", "grade")
 VALUES (3, 'Czym jest filtr Phonga?', 4)
 ON CONFLICT DO NOTHING;

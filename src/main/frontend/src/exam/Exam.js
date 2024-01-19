@@ -30,7 +30,7 @@ export const Exam = () => {
 
 
     const [selectedGrade, setSelectedGrade] = useState("5");
-    const [questionsGrades, setQuestionsGrades] = useState({});
+    const [questionsGrades, setQuestionsGrades] = useState([]);
 
     useEffect(() => {
         if (questionsGrades[selectedQuestionList[currentQuestionPtr]] !== undefined) {
@@ -66,20 +66,20 @@ export const Exam = () => {
 
     const handleNextQuestion = () => {
         if (currentQuestionPtr < selectedQuestionList.length - 1) {
-            setQuestionsGrades(prevGrades => ({
+            setQuestionsGrades(prevGrades => [
                 ...prevGrades,
-                [selectedQuestionList[currentQuestionPtr]]: selectedGrade
-            }));
+                { question: selectedQuestionList[currentQuestionPtr], grade: selectedGrade }
+            ]);
             setCurrentQuestionPtr(currentQuestionPtr + 1);
         }
     };
 
     const handlePreviousQuestion = () => {
         if (currentQuestionPtr > 0) {
-            setQuestionsGrades(prevGrades => ({
+            setQuestionsGrades(prevGrades => [
                 ...prevGrades,
-                [selectedQuestionList[currentQuestionPtr]]: selectedGrade
-            }));
+                { question: selectedQuestionList[currentQuestionPtr], grade: selectedGrade }
+            ]);
             setCurrentQuestionPtr(currentQuestionPtr - 1);
         }
     };
@@ -121,14 +121,15 @@ export const Exam = () => {
     };
 
     const handleFinishExam = async () => {
-        setQuestionsGrades(prevGrades => ({
+        setQuestionsGrades(prevGrades => [
             ...prevGrades,
-            [selectedQuestionList[currentQuestionPtr]]: selectedGrade
-        }));
-        let updatedGrades = {
+            { question: selectedQuestionList[currentQuestionPtr], grade: selectedGrade }
+        ]);
+
+        let updatedGrades = [
             ...questionsGrades,
-            [selectedQuestionList[currentQuestionPtr]]: selectedGrade
-        };
+            { question: selectedQuestionList[currentQuestionPtr], grade: selectedGrade }
+        ];
         let finishTime = Math.floor((Date.now() - startTime) / 1000);
         let min = Math.floor(finishTime / 60);
         let sec = finishTime % 60;
@@ -144,7 +145,7 @@ export const Exam = () => {
                 "index": currentStudent.index,
             },
             className: currentExam,
-            "questions": updatedGrades,
+            reportQuestions: updatedGrades,
             examDuration: finishStr
         };
         const response = await addReport(report).unwrap();
