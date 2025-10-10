@@ -7,6 +7,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.*;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import pbs.model.CSVStudentBean;
 
 import java.io.File;
 import java.util.List;
@@ -76,7 +77,7 @@ public class StudentController {
             description = "Creates a list of students via an uploaded CSV file.")
     @Consumes("multipart/form-data")
     @Produces("application/json")
-    public Uni<List<Student>> parseStudentCSV(@RestForm File file){
+    public Uni<List<CSVStudentBean>> parseStudentCSV(@RestForm File file){
         return studentService.parseStudentsCSV(file);
     }
 }

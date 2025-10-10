@@ -1,7 +1,5 @@
 package pbs.report;
 
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvException;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.security.UnauthorizedException;
 import io.smallrye.mutiny.Uni;
@@ -20,19 +18,18 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 
 import org.jboss.logging.Logger;
-import pbs.model.Question;
+import pbs.model.CSVQuestionBean;
 import pbs.student.StudentService;
+import pbs.utils.CSVHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -144,21 +141,9 @@ public class ReportServiceImpl implements ReportService{
                 .chain(s -> s.merge(report));
     }
 
-    public Uni<List<Question>> parseQuestionCSV(File fileData) {
-        return Uni.createFrom().item(() -> {List<Question> questions = new ArrayList<>();
-            try (FileReader fileReader = new FileReader(fileData)) {
-                try (CSVReader reader = new CSVReader(fileReader)) {
-                    questions = reader.readAll().stream().map(row -> new Question(row[0])).toList();
-                } catch (CsvException e) {
-                    LOG.error(e);
-                }
-            } catch (FileNotFoundException e) {
-                LOG.error(e);
-            } catch (IOException e) {
-                LOG.error(e);
-            }
-            return questions;
-        });
+    public Uni<List<CSVQuestionBean>> parseQuestionCSV(File fileData) {
+        List<CSVQuestionBean> questions = CSVHelper.parseCSVIntoBeanList(fileData, CSVQuestionBean.class);
+        return Uni.createFrom().item(questions);
     }
 
     public Uni<String> generatePDF(Uni<List<Report>> reportList){
@@ -166,7 +151,7 @@ public class ReportServiceImpl implements ReportService{
                 .onItem()
                 .transformToUni(reports -> {
                     if (!reports.isEmpty()) {
-                        String reporter = reports.get(0).examiner.id.toString();
+                        String reporter = reports.getFirst().examiner.id.toString();
                         try (PDDocument pdDocument = new PDDocument()) {
                             reports.forEach(report -> {
                                 PDPage page = new PDPage();
@@ -184,8 +169,7 @@ public class ReportServiceImpl implements ReportService{
                             LOG.info("PDF file generated: " + filePath);
                             return Uni.createFrom().item(fileName);
                         } catch (IOException e) {
-                            LOG.trace(e.getStackTrace());
-                            LOG.error(e.getMessage());
+                            LOG.error("Something went wrong with PDF creation", e);
                             throw new RuntimeException(e);
                         }
                     } else {

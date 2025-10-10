@@ -1,6 +1,7 @@
 package pbs.student;
 
 import io.smallrye.mutiny.Uni;
+import pbs.model.CSVStudentBean;
 
 import java.io.File;
 import java.util.List;
@@ -13,6 +14,6 @@ public interface StudentService {
     Uni<Student> addStudent(Student student);
     Uni<Void> addStudents(List<Student> students);
     Uni<Student> update(Student student);
-    Uni<List<Student>> parseStudentsCSV(File fileData);
+    Uni<List<CSVStudentBean>> parseStudentsCSV(File fileData);
 
 }

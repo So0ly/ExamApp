@@ -5,7 +5,7 @@ import jakarta.annotation.security.RolesAllowed;
 import org.jboss.resteasy.reactive.ResponseStatus;
 import org.jboss.resteasy.reactive.RestForm;
 import pbs.model.IdList;
-import pbs.model.Question;
+import pbs.model.CSVQuestionBean;
 import pbs.model.UrlResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.*;
@@ -130,7 +130,7 @@ public class ReportController {
             description = "Creates a list of questions via an uploaded CSV file.")
     @Consumes("multipart/form-data")
     @Produces("application/json")
-    public Uni<List<Question>> parseQuestionCSV(@RestForm File file) {return reportService.parseQuestionCSV(file);
+    public Uni<List<CSVQuestionBean>> parseQuestionCSV(@RestForm File file) {return reportService.parseQuestionCSV(file);
     }
 
 }

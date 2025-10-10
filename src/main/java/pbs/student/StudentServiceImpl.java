@@ -7,11 +7,10 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.NoArgsConstructor;
 import org.jboss.logging.Logger;
+import pbs.model.CSVStudentBean;
+import pbs.utils.CSVHelper;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,20 +54,8 @@ public class StudentServiceImpl implements StudentService {
                 .chain(s -> s.merge(student));
     }
 
-    public Uni<List<Student>> parseStudentsCSV(File fileData) {
-        return Uni.createFrom().item(() -> {List<Student> students = new ArrayList<>();
-        try (FileReader fileReader = new FileReader(fileData)) {
-            try (CSVReader reader = new CSVReader(fileReader)) {
-                students = reader.readAll().stream().map(row -> new Student(row[0],row[1], row[2])).toList();
-            } catch (CsvException e) {
-                LOG.error(e);
-            }
-        } catch (FileNotFoundException e) {
-            LOG.error(e);
-        } catch (IOException e) {
-            LOG.error(e);
-        }
-        return students;
-    });
+    public Uni<List<CSVStudentBean>> parseStudentsCSV(File fileData) {
+        List<CSVStudentBean> students = CSVHelper.parseCSVIntoBeanList(fileData, CSVStudentBean.class);
+        return Uni.createFrom().item(students);
     }
 }
