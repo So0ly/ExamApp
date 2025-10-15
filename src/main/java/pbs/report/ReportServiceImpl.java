@@ -19,8 +19,11 @@ import lombok.RequiredArgsConstructor;
 
 import org.jboss.logging.Logger;
 import pbs.model.CSVQuestionBean;
+import pbs.model.IdList;
 import pbs.student.StudentService;
+import pbs.utils.AudioHelper;
 import pbs.utils.CSVHelper;
+import pbs.utils.FileHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -43,6 +46,9 @@ public class ReportServiceImpl implements ReportService{
 
     @ConfigProperty(name = "AUDIO_STORAGE_PATH")
     Path AUDIO_PATH;
+
+    @ConfigProperty(name = "pdf.font.path")
+    String fontPath;
 
     private final ExaminerService examinerService;
     private final StudentService studentService;
@@ -146,7 +152,9 @@ public class ReportServiceImpl implements ReportService{
         return Uni.createFrom().item(questions);
     }
 
-    public Uni<String> generatePDF(Uni<List<Report>> reportList){
+    public Uni<String> generatePDF(IdList idList){
+        List<Long> ids = idList.ids();
+        Uni<List<Report>> reportList = getReportsByIds(ids);
         return reportList
                 .onItem()
                 .transformToUni(reports -> {
@@ -180,21 +188,21 @@ public class ReportServiceImpl implements ReportService{
     }
 
     private void addPageFromTemplate(PDDocument pdDocument, Report report, PDPage page) {
-        try (PDPageContentStream contentStream = new PDPageContentStream(pdDocument, page)) {
-            URL imgURL = ReportServiceImpl.class.getClassLoader().getResource("/imgs/PBSlogo.png");
-            if (imgURL != null) {
+        LOG.debugf("Adding page to PDF {}", report.id);
+        try {
+            PDPageContentStream contentStream = new PDPageContentStream(pdDocument, page);
+            File imgFile = FileHelper.getResourcesFile("/imgs/PBSlogo.png");
                 try {
-                    PDImageXObject img = PDImageXObject.createFromFile(imgURL.getPath(), pdDocument);
+                    PDImageXObject img = PDImageXObject.createFromFileByContent(imgFile, pdDocument);
                     PDRectangle size = page.getMediaBox();
                     contentStream.drawImage(img,size.getLowerLeftX()+40,size.getUpperRightY()-148, 166, 148);
                 } catch (IOException e) {
                     LOG.trace(e.getStackTrace());
                     LOG.error("Error loading image: " + e.getMessage());
                 }
-            }
 
             contentStream.beginText();
-            contentStream.setFont(PDType0Font.load(pdDocument, new File(ReportServiceImpl.class.getResource("/Arial-Unicode-Regular.ttf").getPath())), 12);
+            contentStream.setFont(PDType0Font.load(pdDocument, FileHelper.getResourcesFile(fontPath)), 12);
             contentStream.setLeading(14.5f);
             contentStream.newLineAtOffset(25, 625);
             contentStream.showText("Data zaliczenia: " + report.examDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
@@ -216,6 +224,8 @@ public class ReportServiceImpl implements ReportService{
                     throw new RuntimeException(e);
                 }
             });
+            contentStream.showText("Transkrypcja: " + AudioHelper.getTranscriptFromAudio(report.audioURL));
+            contentStream.newLine();
             contentStream.showText("Ocena końcowa: " + report.finalGrade);
             contentStream.newLine();
             contentStream.showText("Czas trwania: " + report.examDuration);
@@ -234,7 +244,6 @@ public class ReportServiceImpl implements ReportService{
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public Uni<Response> getFile(String filename, String fileType) {

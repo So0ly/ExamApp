@@ -25,6 +25,7 @@ dependencies {
     implementation 'org.apache.pdfbox:pdfbox:3.0.5'
     implementation 'com.opencsv:opencsv:5.12.0'
     implementation 'commons-io:commons-io:2.20.0'
+    implementation 'com.alphacephei:vosk:0.3.45'
     compileOnly 'org.projectlombok:lombok:1.18.42'
     annotationProcessor 'org.projectlombok:lombok:1.18.42'
     testImplementation 'io.quarkus:quarkus-junit5'

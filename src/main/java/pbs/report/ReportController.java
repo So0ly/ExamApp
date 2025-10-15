@@ -96,9 +96,7 @@ public class ReportController {
             description = "Generates a PDF report")
     @Consumes("application/json")
     public Uni<Response> generatePdf(IdList idList){
-        List<Long> ids = idList.ids();
-        Uni<List<Report>> reports = reportService.getReportsByIds(ids);
-        return reportService.generatePDF(reports)
+        return reportService.generatePDF(idList)
                 .onItem().transform(url -> Response.ok(new UrlResponse(url)).build())
                 .onFailure().recoverWithItem(
                         e -> Response.status(Response.Status.INTERNAL_SERVER_ERROR)

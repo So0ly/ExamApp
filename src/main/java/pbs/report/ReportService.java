@@ -3,6 +3,7 @@ package pbs.report;
 import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.core.Response;
 import pbs.model.CSVQuestionBean;
+import pbs.model.IdList;
 
 import java.io.File;
 import java.util.List;
@@ -17,7 +18,7 @@ public interface ReportService {
     Uni<List<Report>> getStudentReports(Long id);
     Uni<Void> delete(Long id);
     Uni<Report> update(Report report);
-    Uni<String> generatePDF(Uni<List<Report>> reportList);
+    Uni<String> generatePDF(IdList idList);
     Uni<Response> getFile(String fileName, String fileType);
     Uni<List<CSVQuestionBean>> parseQuestionCSV(File fileData);
 }
