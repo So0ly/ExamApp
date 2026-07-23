@@ -178,7 +178,10 @@ public class ReportServiceImpl implements ReportService{
                             return Uni.createFrom().item(fileName);
                         } catch (IOException e) {
                             LOG.error("Something went wrong with PDF creation", e);
-                            throw new RuntimeException(e);
+                            return Uni.createFrom().failure(new RuntimeException("Failed to generate PDF", e));
+                        } catch (Exception e) {
+                            LOG.error("Something went wrong with PDF creation", e);
+                            return Uni.createFrom().failure(new RuntimeException("Failed to generate PDF", e));
                         }
                     } else {
                         LOG.warn("Report list is empty. PDF generation aborted");
@@ -189,8 +192,7 @@ public class ReportServiceImpl implements ReportService{
 
     private void addPageFromTemplate(PDDocument pdDocument, Report report, PDPage page) {
         LOG.debugf("Adding page to PDF {}", report.id);
-        try {
-            PDPageContentStream contentStream = new PDPageContentStream(pdDocument, page);
+        try (PDPageContentStream contentStream = new PDPageContentStream(pdDocument, page)) {
             File imgFile = FileHelper.getResourcesFile("/imgs/PBSlogo.png");
                 try {
                     PDImageXObject img = PDImageXObject.createFromFileByContent(imgFile, pdDocument);

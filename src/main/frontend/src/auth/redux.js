@@ -1,5 +1,5 @@
 import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
-import {fetchBaseQuery} from '@reduxjs/toolkit/dist/query/react';
+import {fetchBaseQuery} from '@reduxjs/toolkit/query/react';
 import Cookies from 'js-cookie';
 
 export const login = createAsyncThunk(
@@ -49,11 +49,13 @@ const authSlice = createSlice({
             state.jwt = null;
         }
     },
-    extraReducers: {
-        [login.fulfilled]: (state, action) => {
+    extraReducers: builder =>  {
+        builder
+        .addCase(login.rejected, (state, action) => {})
+        .addCase(login.fulfilled, (state, action) => {
             Cookies.set('jwt', action.payload, { expires: 1/8 });
             state.jwt = action.payload;
-        }
+        })
     }
 });
 

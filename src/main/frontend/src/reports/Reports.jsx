@@ -6,7 +6,7 @@ import {
     Typography,
     Button, Grid
 } from '@mui/material';
-import { Delete } from '@mui/icons-material/';
+import { Delete } from '@mui/icons-material';
 import { reportApi } from './api';
 import { Layout } from '../layout';
 import { examinerApi } from "../examiners";
