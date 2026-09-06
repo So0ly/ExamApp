@@ -8,11 +8,13 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.reactive.mutiny.Mutiny;
+import io.vertx.mutiny.pgclient.PgPool;
+import io.vertx.mutiny.sqlclient.Tuple;
 import pbs.examiner.ExaminerService;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
@@ -21,20 +23,17 @@ import org.jboss.logging.Logger;
 import pbs.model.CSVQuestionBean;
 import pbs.model.IdList;
 import pbs.student.StudentService;
-import pbs.utils.AudioHelper;
 import pbs.utils.CSVHelper;
 import pbs.utils.FileHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -52,6 +51,8 @@ public class ReportServiceImpl implements ReportService{
 
     private final ExaminerService examinerService;
     private final StudentService studentService;
+    private final WhisperTranscriptionService whisperTranscriptionService;
+    private final PgPool pgPool;
 
     public Uni<List<Report>> getAllReports(){
         LOG.trace("getAllReports");
@@ -93,15 +94,20 @@ public class ReportServiceImpl implements ReportService{
                             LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                             id
                     );
-                        Path audioPath = AUDIO_PATH.resolve(fileName);
-                        try {
-                            Files.copy(audio.toPath(), audioPath);
-                            report.audioURL = fileName;
-                            return report.persistAndFlush();
-                        } catch (Exception e) {
-                            LOG.error("Error saving audio file", e);
-                            throw new RuntimeException("Error saving audio file", e);
-                        }
+                    Path audioPath = AUDIO_PATH.resolve(fileName);
+                    try {
+                        Files.copy(audio.toPath(), audioPath);
+                        report.audioURL = fileName;
+                        return report.persistAndFlush()
+                                .map(saved -> {
+                                    Report savedReport = (Report) saved;
+                                    whisperTranscriptionService.transcribeInBackground(savedReport.id, audioPath);
+                                    return savedReport;
+                                });
+                    } catch (Exception e) {
+                        LOG.error("Error saving audio file", e);
+                        throw new RuntimeException("Error saving audio file", e);
+                    }
                 });
     }
 
@@ -147,6 +153,12 @@ public class ReportServiceImpl implements ReportService{
                 .chain(s -> s.merge(report));
     }
 
+    public Uni<Void> saveTranscription(Long reportId, String transcription) {
+        return pgPool.preparedQuery("UPDATE reports SET transcription = $1 WHERE id = $2")
+                .execute(Tuple.of(transcription, reportId))
+                .replaceWithVoid();
+    }
+
     public Uni<List<CSVQuestionBean>> parseQuestionCSV(File fileData) {
         List<CSVQuestionBean> questions = CSVHelper.parseCSVIntoBeanList(fileData, CSVQuestionBean.class);
         return Uni.createFrom().item(questions);
@@ -165,6 +177,7 @@ public class ReportServiceImpl implements ReportService{
                                 PDPage page = new PDPage();
                                 pdDocument.addPage(page);
                                 addPageFromTemplate(pdDocument, report, page);
+                                addTranscriptPages(pdDocument, report);
                             });
 
                             String fileName = String.format(
@@ -203,8 +216,9 @@ public class ReportServiceImpl implements ReportService{
                     LOG.error("Error loading image: " + e.getMessage());
                 }
 
+            PDFont font = PDType0Font.load(pdDocument, FileHelper.getResourcesFile(fontPath));
             contentStream.beginText();
-            contentStream.setFont(PDType0Font.load(pdDocument, FileHelper.getResourcesFile(fontPath)), 12);
+            contentStream.setFont(font, 12);
             contentStream.setLeading(14.5f);
             contentStream.newLineAtOffset(25, 625);
             contentStream.showText("Data zaliczenia: " + report.examDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
@@ -215,19 +229,11 @@ public class ReportServiceImpl implements ReportService{
             contentStream.newLine();
             contentStream.showText("Nazwa przedmiotu: "+ report.className);
             contentStream.newLine();
-            Integer[] iter = {1};
-            Uni<List<ReportQuestions>> questions = Mutiny.fetch(report.reportQuestions);
-            questions.subscribe().asCompletionStage().get().forEach((question) ->{
-                try {
-                    contentStream.showText(iter[0].toString() + ". " + question.getQuestion() + " - " + question.getGrade());
-                    contentStream.newLine();
-                    iter[0]++;
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-            contentStream.showText("Transkrypcja: " + AudioHelper.getTranscriptFromAudio(report.audioURL));
-            contentStream.newLine();
+            int iter = 1;
+            for (ReportQuestions question : report.reportQuestions) {
+                contentStream.showText(iter++ + ". " + question.getQuestion() + " - " + question.getGrade());
+                contentStream.newLine();
+            }
             contentStream.showText("Ocena końcowa: " + report.finalGrade);
             contentStream.newLine();
             contentStream.showText("Czas trwania: " + report.examDuration);
@@ -241,11 +247,81 @@ public class ReportServiceImpl implements ReportService{
         } catch (IOException e) {
             LOG.trace(e.getStackTrace());
             LOG.error(e.getMessage());
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
         }
+    }
+
+    private void addTranscriptPages(PDDocument document, Report report) {
+        PDFont font;
+        PDRectangle pageSize = new PDPage().getMediaBox();
+        try {
+            font = PDType0Font.load(document, FileHelper.getResourcesFile(fontPath));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load PDF font", e);
+        }
+
+        String transcription = report.transcription == null ? "" : report.transcription.trim();
+        List<String> lines = wrapText(
+                transcription.isEmpty() ? "Transcription is not available yet." : transcription,
+                font, 12, pageSize.getWidth() - 80
+        );
+        int linesPerPage = (int) ((pageSize.getHeight() - 80) / 14.5f);
+
+        int start = 0;
+        int pageNumber = 0;
+        while (start < lines.size()) {
+            int pageCapacity = pageNumber == 0 ? linesPerPage - 1 : linesPerPage;
+            int end = Math.min(start + pageCapacity, lines.size());
+            PDPage page = new PDPage();
+            document.addPage(page);
+            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+                contentStream.beginText();
+                contentStream.setFont(font, 12);
+                contentStream.setLeading(14.5f);
+                contentStream.newLineAtOffset(40, pageSize.getHeight() - 40);
+                if (pageNumber == 0) {
+                    contentStream.showText("Transkrypcja:");
+                    contentStream.newLine();
+                }
+                for (int line = start; line < end; line++) {
+                    contentStream.showText(lines.get(line));
+                    contentStream.newLine();
+                }
+                contentStream.endText();
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to write transcription page", e);
+            }
+            start = end;
+            pageNumber++;
+        }
+    }
+
+    private List<String> wrapText(String text, PDFont font, float fontSize, float maxWidth) {
+        List<String> lines = new java.util.ArrayList<>();
+        for (String paragraph : text.replace("\r\n", "\n").split("\n", -1)) {
+            StringBuilder line = new StringBuilder();
+            for (String word : paragraph.split("\\s+")) {
+                if (word.isEmpty()) {
+                    continue;
+                }
+                String candidate = line.isEmpty() ? word : line + " " + word;
+                try {
+                    if (font.getStringWidth(candidate) / 1000 * fontSize <= maxWidth) {
+                        line.setLength(0);
+                        line.append(candidate);
+                    } else {
+                        if (!line.isEmpty()) {
+                            lines.add(line.toString());
+                        }
+                        line.setLength(0);
+                        line.append(word);
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to measure transcription text", e);
+                }
+            }
+            lines.add(line.toString());
+        }
+        return lines;
     }
 
     public Uni<Response> getFile(String filename, String fileType) {

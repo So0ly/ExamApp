@@ -18,6 +18,7 @@ public interface ReportService {
     Uni<List<Report>> getStudentReports(Long id);
     Uni<Void> delete(Long id);
     Uni<Report> update(Report report);
+    Uni<Void> saveTranscription(Long reportId, String transcription);
     Uni<String> generatePDF(IdList idList);
     Uni<Response> getFile(String fileName, String fileType);
     Uni<List<CSVQuestionBean>> parseQuestionCSV(File fileData);

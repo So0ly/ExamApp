@@ -37,6 +37,10 @@ public class Report extends PanacheEntityBase {
     @ManyToOne(optional = false)
     public Examiner examiner;
 
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    public String transcription;
+
     public void setFinalGrade() {
         double avg = this.reportQuestions.stream().mapToDouble(ReportQuestions::getGrade).average()
                 .orElseThrow(() -> new RuntimeException("No grades in the question map"));
